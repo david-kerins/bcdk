@@ -1,19 +1,18 @@
 # bcdk Tutorial
 
+## Concepts
 
-### Concepts
+### Infrastructure as Code
 
-#### Infrastructure as Code
-
-One of the key concepts of the `BCDK` tools is the idea of `Infrastructure as Code`.  What this mean is that any tools that support building, testing and deploying you application are also part of your code base in the version control repository.  This means that you would have a single software repository (GitHub Repository) which will contain not only your application code but also any code for tools needed to build and deploy your application.  Prime examples of infrastructure tools needed to support your application build/deploy cycle are Jenkins, Sonarqube, etc.  
+One of the key concepts of the `BCDK` tools is the idea of `Infrastructure as Code`.  What this means is that any tools that support building, testing and deploying your application are also part of your code base in the version control repository.  This means that you would have a single software repository (GitHub Repository) which will contain not only your application code but also any code for tools needed to build and deploy your application.  Prime examples of infrastructure tools needed to support your application build/deploy cycle are Jenkins, Sonarqube, etc.  
 
 #### Modules
 
-To support the concept of `Infrastructure as Code`, the `bcdk` tool makes the distinction between one or more infrastructure tools and your application in the version control repository using the term `module`.  You can think about the modules in your source code repository as being either an `infrastructure module` or an `application module`.  In the source version control repository, one `module` is your application code.  Another `module` could be Jenkins and yet another `module` could be Sonarqube. Each `module` is considered a separate item in that they have their own build and deploy schedule.  This is manifest is Openshift as distinct Build and Deployment artifacts for each `module` in the repository.
+To support the concept of `Infrastructure as Code`, the `bcdk` tool makes the distinction between one or more infrastructure tools and your application in the version control repository using the term `module`.  You can think about the modules in your source code repository as being either an `infrastructure module` or an `application module`.  In the source version control repository, one `module` is your application code.  Another `module` could be Jenkins and yet another `module` could be Sonarqube. Each `module` is considered a separate item in that they have their own build and deploy schedule.  This is manifest in Openshift as distinct Build and Deployment artifacts for each `module` in the repository.
 
 #### Components
 
-Each `module` will have one or more `components`.  For example, the default Jenkins `module`, created by the BCDK generator (see below), has 2 components that are build and deployed.  These components are a Jenkins master and a slave instance.  Each `component` of a `module`, is has it's own Openshift build configuration file and deployment configuration file in the `openshift` directory.  For the module build, each of these components is listed as an object in the `lib/build.js` file used orchestrate the `module` build.
+Each `module` will have one or more `components`.  For example, the default Jenkins `module`, created by the BCDK generator (see below), has 2 components that are build and deployed.  These components are a Jenkins master and a slave instance.  Each `component` of a `module`, is has it's own Openshift build configuration file and deployment configuration file in the `openshift` directory.  For the module build, each of these components is listed as an object in the `.pipeline/lib/build.js` file used orchestrate the `module` build.
 
 #### Pull Request Pipelines
 
@@ -90,7 +89,7 @@ A less opinionated generator is the `bcdk:pipeline` which will create a basic sc
 
 The `bcdk` provides generator for a simple sample application that you can use to try out the `bcdk` Pull Request pipeline approach.  This tutorial will use this generator to demonstrate the workflow involved in using the `bcdk` tools for application builds and deployments that are driven by pull requests.
 
-See the `README.md` for details about each generator
+See the `bcdk` `README.md` for details about each generator
 
 ### Workflow
 
@@ -101,228 +100,231 @@ See the `README.md` for details about each generator
 + You have a GitHub account and have created a personal access token for that account.
 + You have a set of Openshift namespaces that will be used for builds/deploys of application modules
 
+Note: If you are working with GitHub Private repositories the personal access token requires `admin:repo_hook` and `repo` privileges
+
 ### Building and deploying the Jenkins module for the application
 
 1. Create a new repository called `python-hello` in your account GitHub (Choose to have a README.md file).
 2. Clone to your local system and change directory into the new empty repo.
 
-```bash
-  git clone https://github.com/david-kerins/python-hello.git
-  cd python-hello
-```
+    ```bash
+    git clone https://github.com/david-kerins/python-hello.git
+    cd python-hello
+    ```
 
 3. Create a new feature branch from `master`
 
-```bash
-  git checkout -b feature/setup-bcdk-jenkins
-```
+    ```bash
+    git checkout -b feature/setup-bcdk-jenkins
+    ```
 
 4. Login to Pathfinder (or your Openshift cluster) and run the `bdck:jenkins` generator.  Follow the prompts.
 
-```bash
-  oc login https://ocp.bitbox.ca:8443 --token=KhMBp76_OYYemFsSMP-vKXTgC4kKedtsipYxO6f2HX0
+    ```bash
+    oc login https://ocp.bitbox.ca:8443 --token=KhMBp76_OYYemFsSMP-vKXTgC4kKedtsipYxO6f2HX0
 
-  yo bcdk:jenkins
-```
+    yo bcdk:jenkins
+   ```
 
-  *You should answer the prompts as follows but using your own information for openshift `tools` namespace, github info, etc.*
+    *You should answer the prompts as follows but using your own information for openshift `tools` namespace, github info, etc.*
 
-----
+    ----
 
-  You are authenticated in OpenShift as david-kerins
+      You are authenticated in OpenShift as david-kerins
 
-  What is your openshift 'tools' namespace name? `gtncer-tools`
+      What is your openshift 'tools' namespace name? `gtncer-tools`
 
-  One or more required secrets are missing.
-  We will need a GitHub username. We strongly recommend creating an account shared with the team for CI/CD/Automation purposes. `david-kerins`
+      One or more required secrets are missing.
+      We will need a GitHub username. We strongly recommend creating an account shared with the team for CI/CD/Automation purposes. `david-kerins`
 
-  What is the personal access token for the GitHub account?
-   See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
-   Required priveleges: public_repo, repo:status, repo_deployment, admin:repo_hook [hidden]
+      What is the personal access token for the GitHub account?
+      See <https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line>
+      Required privileges: public_repo, repo:status, repo_deployment, admin:repo_hook [hidden]
 
-  Setting module
+      Setting module
 
-  What is this module name? `jenkins`
+      What is this module name? `jenkins`
+
+      What is this module version? `1.0.0`
+
+      What environments are supported by your app? separated by space `build dev prod`
   
-  What is this module version? `1.0.0`
-  
-  What environments are supported by your app? separated by space `build dev prod`
-  
-  What is the source code directory for this module? `.jenkins`
-  
-  What namespace/project name is used for 'build?' `gtncer-tools`
-  
-  What namespace/project name is used for 'dev?' `gtncer-tools`
-  
-  What namespace/project name is used for 'prod?' `gtncer-tools`
-  
-  What is the GitHub organization where the repository is located? `david-kerins`
-  
-  What is the repository's name? `python-hello`
-  
-  What is the Jenkinsfile path? `.jenkins/Jenkinsfile`
+    What is the source code directory for this module? `.jenkins`
 
-----
-NOTE: The `yo bcdk:jenkins` command creates a `.jenkins` subdirectory in your local version of the repository but it also creates some objects in the Openshift `tools` namespace.  In particular, it creates some secrets that will be used by Jenkins.
+    What namespace/project name is used for 'build?' `gtncer-tools`
 
-NOTE: If you are trying this tutorial on a non-Pathfinder Openshift cluster, you may wish to change the hard-code reference to `pathfinder.bc.ca` in the `.jenkins/.pipeline/lib/deploy.js`.  Changing this will allow routes to be correct on a non-Pathfinder cluster.
+    What namespace/project name is used for 'dev?' `gtncer-tools`
 
+    What namespace/project name is used for 'prod?' `gtncer-tools`
+
+    What is the GitHub organization where the repository is located? `david-kerins`
+
+    What is the repository's name? `python-hello`
+
+    What is the Jenkinsfile path? `.jenkins/Jenkinsfile`
+
+    ----
+    NOTE: The `yo bcdk:jenkins` command creates a `.jenkins` subdirectory in your local version of the repository but it also creates some objects in the Openshift `tools` namespace.  In particular, it creates some secrets that will be used by Jenkins.
+
+    NOTE: If you are trying this tutorial on a non-Pathfinder Openshift cluster, you may wish to change the hard-code reference to `pathfinder.bc.ca` in the `.jenkins/.pipeline/lib/deploy.js`.  Changing this will allow routes to be correct on a non-Pathfinder cluster.
 
 5. Commit and push to GitHub
 
-```bash
-git add --all
-git commit -m"Initial commit of Jenkins module"
-git push --set-upstream origin feature/setup-bcdk-jenkins
-```
+    ```bash
+    git add --all
+    git commit -m"Initial commit of Jenkins module"
+    git push --set-upstream origin feature/setup-bcdk-jenkins
+    ```
 
 6. Change directories into the Jenkins `module` folder, run npm install
 
-```bash
-  cd .jenkins/.pipeline/
-  npm i
-```
+    ```bash
+    cd .jenkins/.pipeline/
+    npm i
+    ```
 
 7. Run the build for Jenkins.
 
-```bash
-  npm run build -- --pr=0 --dev-mode=true
-```
+    ```bash
+    npm run build -- --pr=0 --dev-mode=true
+    ```
 
-*Since we are bootstrapping Jenkins for the first time we use a couple of flags `--pr=0 --dev-mode=true`.  We give it a initial pull request number of '0' and use the 'dev-mode' flag to have it build using local files rather than looking to Github.*
+    *Since we are bootstrapping Jenkins for the first time we use a couple of flags `--pr=0 --dev-mode=true`.  We give it a initial pull request number of '0' and use the 'dev-mode' flag to have it build using local files rather than looking to Github.*
 
-If everything worked, there should be two build configurations on the Openshift `tools` namespace, one build for the Jenkins master and one for the Jenkins slave, plus build images for them.
+    If everything worked, there should be two build configurations on the Openshift `tools` namespace, one build for the Jenkins master and one for the Jenkins slave, plus build images for them.
 
-```bash
-oc get bc
-NAME                         TYPE     FROM                   LATEST
-jenkins-build-0              Docker   Git@refs/pull/0/head   1
-jenkins-slave-main-build-0   Docker   Dockerfile             1
+    ```bash
+    oc get bc
 
-oc get is
-NAME               DOCKER REPO                                                      TAGS          UPDATED
-jenkins            docker-registry.default.svc:5000/gtncer-tools/jenkins            build-1.0.0-0 5 minutes ago
-jenkins-slave-main docker-registry.default.svc:5000/gtncer-tools/jenkins-slave-main build-1.0.0-0 4 minutes ago
-```
+    NAME                         TYPE     FROM                   LATEST jenkins-build-0              Docker   Git@refs/pull/0/head   1
+    jenkins-slave-main-build-0   Docker   Dockerfile             1
+    ```
+
+    ```bash
+    oc get is
+
+    NAME               DOCKER REPO      TAGS          UPDATED
+    jenkins            docker-registry.default.svc:5000/gtncer-tools/jenkins build-1.0.0-0 5 minutes ago
+    jenkins-slave-main docker-registry.default.svc:5000/gtncer-tools/jenkins-slave-main build-1.0.0-0 4 minutes ago
+    ```
 
 8. Run the deploy for the 'dev' instance of Jenkins
 
-```bash
-npm run deploy -- --pr=0 --env=dev
-```
+    ```bash
+    npm run deploy -- --pr=0 --env=dev
+    ```
 
-If everything worked as expected there should be 2 deployment configurations and a route to the new 'dev' instance of Jenkins in your project's `tools` openshift namespace.
+    If everything worked as expected there should be 2 deployment configurations and a route to the new 'dev' instance of Jenkins in your project's `tools` openshift namespace.
 
-```bash
-oc get dc
+    ```bash
+    oc get dc
 
-NAME                  REVISION   DESIRED   CURRENT   TRIGGERED BY
-jenkins-build-dev-0   1          1         1         config,image(jenkins:dev-1.0.0-0)
-jenkins-dev-0         1          1         1         config,image(jenkins:dev-1.0.0-0)
+    NAME                  REVISION   DESIRED   CURRENT   TRIGGERED BY
+    jenkins-build-dev-0   1          1         1         config,image(jenkins:dev-1.0.0-0)
+    jenkins-dev-0         1          1         1         config,image(jenkins:dev-1.0.0-0)
 
-oc get routes
+    oc get routes
 
-NAME            HOST/PORT                                  PATH   SERVICES        PORT       TERMINATION   WILDCARD
-jenkins-dev-0   jenkins-dev-0-gtncer-tools.ocp.bitbox.ca   /      jenkins-dev-0   8080-tcp   edge          None
-``` 
+    NAME            HOST/PORT                                  PATH   SERVICES        PORT       TERMINATION   WILDCARD
+    jenkins-dev-0   jenkins-dev-0-gtncer-tools.ocp.bitbox.ca   /      jenkins-dev-0   8080-tcp   edge          None
+    ```
 
-Note:  if you are experiencing issues, you could try running the `npm` command with debug.
+    Note:  if you are experiencing issues, you could try running the `npm` command with debug.
 
-```bash
-DEBUG=* npm run deploy -- --pr=0 --env=dev
-```
+    ```bash
+    DEBUG=* npm run deploy -- --pr=0 --env=dev
+    ```
 
 9. Run the deploy for the 'prod' instance of Jenkins
 
-```bash
-npm run deploy -- --pr=0 --env=prod
-```
+    ```bash
+    npm run deploy -- --pr=0 --env=prod
+    ```
 
-If everything worked as expected there should be 2 deployment configurations and a route to the new 'prod' instance of Jenkins in your project's `tools` openshift namespace.
+    If everything worked as expected there should be 2 deployment configurations and a route to the new 'prod' instance of Jenkins in your project's `tools` openshift namespace.
 
-```bash
-oc get dc
+    ```bash
+    oc get dc
 
-NAME                  REVISION   DESIRED   CURRENT   TRIGGERED BY
-jenkins-build-dev-0   1          1         1         config,image(jenkins:dev-1.0.0-0)
-jenkins-build-prod    1          1         1         config,image(jenkins:prod-1.0.0)
-jenkins-dev-0         1          1         1         config,image(jenkins:dev-1.0.0-0)
-jenkins-prod          1          1         1         config,image(jenkins:prod-1.0.0)
+    NAME                  REVISION   DESIRED   CURRENT   TRIGGERED BY
+    jenkins-build-dev-0   1          1         1         config,image(jenkins:dev-1.0.0-0)
+    jenkins-build-prod    1          1         1         config,image(jenkins:prod-1.0.0)
+    jenkins-dev-0         1          1         1         config,image(jenkins:dev-1.0.0-0)
+    jenkins-prod          1          1         1         config,image(jenkins:prod-1.0.0)
 
-oc get routes
+    oc get routes
 
-NAME            HOST/PORT                                  PATH   SERVICES        PORT       TERMINATION   WILDCARD
-jenkins-dev-0   jenkins-dev-0-gtncer-tools.ocp.bitbox.ca   /      jenkins-dev-0   8080-tcp   edge          None
-jenkins-prod    jenkins-prod-gtncer-tools.ocp.bitbox.ca    /      jenkins-prod    8080-tcp   edge          None
-```
+    NAME            HOST/PORT                                  PATH   SERVICES        PORT       TERMINATION   WILDCARD
+    jenkins-dev-0   jenkins-dev-0-gtncer-tools.ocp.bitbox.ca   /      jenkins-dev-0   8080-tcp   edge          None
+    jenkins-prod    jenkins-prod-gtncer-tools.ocp.bitbox.ca    /      jenkins-prod    8080-tcp   edge          None
+    ```
 
-Use the `prod` route to connect to the PROD Jenkins and check out the fact there is a `_jenkins` Multibranch pipeline and a `_SYS` folder.  The `_jenkins` Multibranch pipeline is the pipeline used to manage the lifecycle of the Jenkins `module` in your repository.  If change is made to the `.jenkins` subdirectory in the code repository and a pull request is created, this pipeline will rebuild and redeploy Jenkins.  Keep this browser tab open, it will be used later.
+    Use the `prod` route to connect to the PROD Jenkins and check out the fact there is a `_jenkins` Multibranch pipeline and a `_SYS` folder.  The `_jenkins` Multibranch pipeline is the pipeline used to manage the lifecycle of the Jenkins `module` in your repository.  If change is made to the `.jenkins` subdirectory in the code repository and a pull request is created, this pipeline will rebuild and redeploy Jenkins.  Keep this browser tab open, it will be used later.
 
-NOTE: There are a few things to notice and understand.
+    NOTE: There are a few things to notice and understand.
 
-+ First, both the `dev` and `prod` Jenkins instances have a Jenkins `master` and a `slave`.
-+ The `prod` Jenkins master is `jenkins-prod` and the slave is `jenkins-build-prod`.
-+ Notice that the `dev` master and slave are also identified by the pull request number used to create them (i.e. 0)
-+ Prod does not have a pull request associated
+    + First, both the `dev` and `prod` Jenkins instances have a Jenkins `master` and a `slave`.
+    + The `prod` Jenkins master is `jenkins-prod` and the slave is `jenkins-build-prod`.
+    + Notice that the `dev` master and slave are also identified by the pull request number used to create them (i.e. 0)
+    + Prod does not have a pull request associated
 
-NOTE: The reason there is a `dev` and a `prod` Jenkins is to allow for the testing of changes before actually using the new, changed version of Jenkins for building and deploying the `modules` of your application.  The `dev` instance of Jenkins is ephemeral, only lasting for as long as the pull request is open.  But for the initial bootstrapping, we will now clean up the `build` and `dev` deploy of Jenkins. 
+    NOTE: The reason there is a `dev` and a `prod` Jenkins is to allow for the testing of changes before actually using the new, changed version of Jenkins for building and deploying the `modules` of your application.  The `dev` instance of Jenkins is ephemeral, only lasting for as long as the pull request is open.  But for the initial bootstrapping, we will now clean up the `build` and `dev` deploy of Jenkins.
 
 10. Clean up the Jenkins `build` and `dev` deploy artifacts.
 
-The following step will clean/remove the build configuration from your project's openshift `tools` namespace.
+    The following step will clean/remove the build configuration from your project's openshift `tools` namespace.
 
-```bash
-npm run clean -- --pr=0 --env=build
-```
+    ```bash
+    npm run clean -- --pr=0 --env=build
+    ```
 
-```bash
-npm run clean -- --pr=0 --env=dev
-```
+    ```bash
+    npm run clean -- --pr=0 --env=dev
+    ```
 
-NOTE: Steps 7 - 10 only need to be done once to bootstap Jenkins in your project's openshift `tools` namespace.  Once completed, Jenkins will self-manage itself based on any code changes made in the `.jenkins` subdirectory of the project repository and subsequent creation of a pull request.  Let's try this out.
+    NOTE: Steps 7 - 10 only need to be done once to bootstap Jenkins in your project's openshift `tools` namespace.  Once completed, Jenkins will self-manage itself based on any code changes made in the `.jenkins` subdirectory of the project repository and subsequent creation of a pull request.  Let's try this out.
 
 11. Create a Pull Request
 
-Remember, that we are currently in the feature branch `feature/setup-bcdk-jenkins`.  In step 5 we committed and pushed the feature branch to Github, so the local copy should be in sync with `origin` on GitHub.  If, for what ever reason, you did make any changes, make sure the local copy is synced with origin.
+    Remember, that we are currently in the feature branch `feature/setup-bcdk-jenkins`.  In step 5 we committed and pushed the feature branch to Github, so the local copy should be in sync with `origin` on GitHub.  If, for what ever reason, you did make any changes, make sure the local copy is synced with origin.
 
-```bash
-git status .
-On branch feature/setup-bcdk-jenkins
-Your branch is up to date with 'origin/feature/setup-bcdk-jenkins'.
+    ```bash
+    git status .
+    On branch feature/setup-bcdk-jenkins
+    Your branch is up to date with 'origin/feature/setup-bcdk-jenkins'.
 
-nothing to commit, working tree clean
-```
+    nothing to commit, working tree clean
+    ```
 
-Now go to GitHub and create a pull request to pull the changes in the `feature/setup-bcdk-jenkins` branch into `master`.
+    Now go to GitHub and create a pull request to pull the changes in the `feature/setup-bcdk-jenkins` branch into `master`.
 
-When you create the Pull Request, it will fire the webhook created by the `yo bcdk:jenkins` command executed earlier.  You should switch over to Jenkins and in the `_jenkins` multi-branch pipeline you should see the job executing with a name that matches the Pull Request number from GitHub.  
+    When you create the Pull Request, it will fire the webhook created by the `yo bcdk:jenkins` command executed earlier.  You should switch over to Jenkins and in the `_jenkins` multi-branch pipeline you should see the job executing with a name that matches the Pull Request number from GitHub.  
 
-`https://jenkins-prod-gtncer-tools.ocp.bitbox.ca/job/_jenkins/view/change-requests/job/PR-1/`
+    `https://jenkins-prod-gtncer-tools.ocp.bitbox.ca/job/_jenkins/view/change-requests/job/PR-1/`
 
-NOTE:  This pipeline will rebuild Jenkins and will wait/prompt for a confirmation to promote the build to `prod`.  This isn't the project's Openshift `-prod` namespace.  Remember when we ran `yo bcdk:jenkins` we specified the target Openshift namespace to be the project's `-tools` namespace for all the `env` (environments) we specified.  Also remember that we only specified `build dev prod` as the environments for Jenkins.  So when you look at the pipeline the promotion path goes from `dev` to `prod`, there is no `test` environment.  (For the sample application, we will specify `build dev test prod`),
+    NOTE:  This pipeline will rebuild Jenkins and will wait/prompt for a confirmation to promote the build to `prod`.  This isn't the project's Openshift `-prod` namespace.  Remember when we ran `yo bcdk:jenkins` we specified the target Openshift namespace to be the project's `-tools` namespace for all the `env` (environments) we specified.  Also remember that we only specified `build dev prod` as the environments for Jenkins.  So when you look at the pipeline the promotion path goes from `dev` to `prod`, there is no `test` environment.  (For the sample application, we will specify `build dev test prod`),
 
-NOTE: When you `approve` the promotion of the Jenkins `module` to `prod`, as some point Jenkins will become unavailable as the Openshift pod (`master` and `slave`) for the existing instance of Jenkins will be destroyed and a new set of pods will start.  You will have to log into Jenkins again too.
+    NOTE: When you `approve` the promotion of the Jenkins `module` to `prod`, as some point Jenkins will become unavailable as the Openshift pod (`master` and `slave`) for the existing instance of Jenkins will be destroyed and a new set of pods will start.  You will have to log into Jenkins again too.
 
 12. Close the Pull Request and tidy up!
 
-The last thing to do is close the pull request and tidy up:
+    The last thing to do is close the pull request and tidy up:
 
-+ Go to GitHub and perform a `Squash and Merge` on the pull request.
-+ Delete the feature branch using the button available on GitHub.
-+ On your local system, change directory to be at the root of the repository.
-+ Checkout `master` and pull the merge to your local copy of `master`
-+ Delete your local copy of the feature branch.
+    + Go to GitHub and perform a `Squash and Merge` on the pull request.
+    + Delete the feature branch using the button available on GitHub.
+    + On your local system, change directory to be at the root of the repository.
+    + Checkout `master` and pull the merge to your local copy of `master`
+    + Delete your local copy of the feature branch.
 
-```bash
-cd ../..
-git status .
-git checkout master
-git pull
-git branch -d feature/setup-bcdk-jenkins
-```
+    ```bash
+    cd ../..
+    git status .
+    git checkout master
+    git pull
+    git branch -d feature/setup-bcdk-jenkins
+    ```
 
 At this point, there is only a `master` branch on GitHub and everything is tidy and ready for the next step.
-
 
 ### Create the Jenkins Pipeline for the python-hello application
 
@@ -334,290 +336,290 @@ As a reminder, run the command to list the available generators and notice that 
 yo bcdk --generators
 ```
 
-1.  Create a new feature branch
+1. Create a new feature branch
 
-You should be on `master` and the local working copy of `master` should be synced with GitHub.
+    You should be on `master` and the local working copy of `master` should be synced with GitHub.
 
-```bash
-git checkout -b feature/python-hello-jenkins-pipeline
-```
+    ```bash
+    git checkout -b feature/python-hello-jenkins-pipeline
+    ```
 
 2. Run the `yo bcdk:python-hello`
 
-Accept all the defaults except for the Openshift namespaces.  The `build` will happen in the `-tools` Openshift namespace, `dev` deploy will be to the `-dev` Openshift namespace, etc. 
+    Accept all the defaults except for the Openshift namespaces.  The `build` will happen in the `-tools` Openshift namespace, `dev` deploy will be to the `-dev` Openshift namespace, etc.
 
-```bash
-yo bcdk:python-hello
+    ```bash
+    yo bcdk:python-hello
 
-     _-----_     ╭──────────────────────────╮
-    |       |    │   Welcome to the doozie  │
-    |--(o)--|    │      generator-bcdk      │
-   `---------´   │        generator!        │
-    ( _´U`_ )    ╰──────────────────────────╯
-    /___A___\   /
-     |  ~  |
-   __'.___.'__
- ´   `  |° ´ Y `
+      _-----_     ╭──────────────────────────╮
+      |       |    │   Welcome to the doozie  │
+      |--(o)--|    │      generator-bcdk      │
+    `---------´   │        generator!        │
+      ( _´U`_ )    ╰──────────────────────────╯
+      /___A___\   /
+      |  ~  |
+    __'.___.'__
+    ´   `  |° ´ Y `
 
-  What module this component will belong to? main
-  What module root path? .
-  What do you want to call this component? hello
-Setting module
-  What is this module name? main
-  What is this module version? 1.0.0
-  What environments are supported by your app? separated by space build dev test prod
-  What is the source code directory for this module? .
-  What namespace/project name is used for 'build?' gtncer-tools
-  What namespace/project name is used for 'dev?' gtncer-dev
-  What namespace/project name is used for 'test?' gtncer-test
-  What namespace/project name is used for 'prod?' gtncer-prod
-```
+    What module this component will belong to? main
+    What module root path? .
+    What do you want to call this component? hello
+    Setting module
+    What is this module name? main
+    What is this module version? 1.0.0
+    What environments are supported by your app? separated by space build dev test prod
+    What is the source code directory for this module? .
+    What namespace/project name is used for 'build?' gtncer-tools
+    What namespace/project name is used for 'dev?' gtncer-dev
+    What namespace/project name is used for 'test?' gtncer-test
+    What namespace/project name is used for 'prod?' gtncer-prod
+    ```
 
-These are the files that have been created by running this generator.
+    These are the files that have been created by running this generator.
 
-```bash
-git status .                                                                                                          ✭ ✱
-On branch feature/python-hello-jenkins-pipeline
-Changes not staged for commit:
-  (use "git add <file>..." to update what will be committed)
-  (use "git checkout -- <file>..." to discard changes in working directory)
+    ```bash
+    git status .                                                                                                          ✭ ✱
+    On branch feature/python-hello-jenkins-pipeline
+    Changes not staged for commit:
+    (use "git add <file>..." to update what will be committed)
+    (use "git checkout -- <file>..." to discard changes in working directory)
 
-	modified:   .yo-rc.json
+    modified:   .yo-rc.json
 
-Untracked files:
-  (use "git add <file>..." to include in what will be committed)
+    Untracked files:
+    (use "git add <file>..." to include in what will be committed)
 
-	.pipeline/
-	Jenkinsfile
-	hello-base/
-	hello-main/
-	openshift/
+    .pipeline/
+    Jenkinsfile
+    hello-base/
+    hello-main/
+    openshift/
+    ```
 
-```
 3. Run the `bcdk:jenkins-job` generator
 
-This generator will create the Jenkins Job/Pipeline for the `python-hello` application.  We need to create this Jenkins job first to take advantage of the pull request pipeline for building the `python-hello` application.
+    This generator will create the Jenkins Job/Pipeline for the `python-hello` application.  We need to create this Jenkins job first to take advantage of the pull request pipeline for building the `python-hello` application.
 
-```bash
-yo bcdk:jenkins-job                                                                                                   ✭ ✱
- Module name? .
- Jenkins Job name? python-hello
- What is the GitHub organization where the repository is located? david-kerins
- What is the repositorys name? python-hello
- What is the Jenkinsfile path? Jenkinsfile
-Writing 'jenkins-job' files.
-   create .jenkins/docker/contrib/jenkins/configuration/jobs/python-hello/config.xml
+    ```bash
+    yo bcdk:jenkins-job                                                                                                   ✭ ✱
+    Module name? .
+    Jenkins Job name? python-hello
+    What is the GitHub organization where the repository is located? david-kerins
+    What is the repositorys name? python-hello
+    What is the Jenkinsfile path? Jenkinsfile
+    Writing 'jenkins-job' files.
+      create .jenkins/docker/contrib/jenkins/configuration/jobs/python-hello/config.xml
 
-```
+    ```
 
-Now there are a bunch of untracked files in our local copy of the feature branch.  We only want to add and commit the file created by the `bcdk:jenkins-job` generator.  
+    Now there are a bunch of untracked files in our local copy of the feature branch.  We only want to add and commit the file created by the `bcdk:jenkins-job` generator.  
 
-```bash
-git add .jenkins/docker/contrib/jenkins/configuration/jobs/python-hello/config.xml
-git commit -m"Create pipeline for the python-hello application"
-git push --set-upstream origin feature/python-hello-jenkins-pipeline
-```
+    ```bash
+    git add .jenkins/docker/contrib/jenkins/configuration/jobs/python-hello/config.xml
+    git commit -m"Create pipeline for the python-hello application"
+    git push --set-upstream origin feature/python-hello-jenkins-pipeline
+    ```
 
-Now, go to GitHub and create a pull request to pull the `feature/python-hello-jenkins-pipeline` branch changes to `master`
+    Now, go to GitHub and create a pull request to pull the `feature/python-hello-jenkins-pipeline` branch changes to `master`
 
-If you go to Jenkins now, there should be a new pull request build/deploy happening.
+    If you go to Jenkins now, there should be a new pull request build/deploy happening.
 
-```bash
-https://jenkins-prod-gtncer-tools.ocp.bitbox.ca/job/_jenkins/view/change-requests/job/PR-2/
-```
-This will rebuild and redeploy Jenkins with the new configuration to support the `python-hello` application.  Remember to accept the promotion of the new Jenkins build to `prod`.
+    ```bash
+    https://jenkins-prod-gtncer-tools.ocp.bitbox.ca/job/_jenkins/view/change-requests/job/PR-2/
+    ```
 
-Jenkins should now have a `python-hello` multibranch pipeline.
+    This will rebuild and redeploy Jenkins with the new configuration to support the `python-hello` application.  Remember to accept the promotion of the new Jenkins build to `prod`.
 
-Go to GitHub and `Squash and Merge` to close the pull request and delete the `feature/python-hello-jenkins-pipeline` branch on GitHub.
+    Jenkins should now have a `python-hello` multibranch pipeline.
 
-Now, locally, checkout master, pull to sync the local `master` with GitHub and then delete the local copy of the `feature/python-hello-jenkins-pipeline` branch.
+    Go to GitHub and `Squash and Merge` to close the pull request and delete the `feature/python-hello-jenkins-pipeline` branch on GitHub.
 
-```bash
-git checkout master
-git pull
-git branch -d feature/python-hello-jenkins-pipeline
-```
+    Now, locally, checkout master, pull to sync the local `master` with GitHub and then delete the local copy of the `feature/python-hello-jenkins-pipeline` branch.
 
-
+    ```bash
+    git checkout master
+    git pull
+    git branch -d feature/python-hello-jenkins-pipeline
+    ```
 
 ### Building and deploying the sample python-hello application
 
 Finally, we can get the sample `python-hello` application going.  Hopefully, the steps involved will start looking familiar.
 
-1.  Create a new feature branch
+1. Create a new feature branch
 
-You should be on `master` and the local working copy of `master` should be synced with GitHub.
+    You should be on `master` and the local working copy of `master` should be synced with GitHub.
 
-```bash
-git checkout -b feature/python-hello-app
-```
+    ```bash
+    git checkout -b feature/python-hello-app
+    ```
 
 2. Run the `yo bcdk:python-hello`
 
-Accept all the defaults except for the Openshift namespaces.  The `build` will happen in the `-tools` Openshift namespace, `dev` deploy will be to the `-dev` Openshift namespace, etc. 
+    Accept all the defaults except for the Openshift namespaces.  The `build` will happen in the `-tools` Openshift namespace, `dev` deploy will be to the `-dev` Openshift namespace, etc.
 
-```bash
-yo bcdk:python-hello
+    ```bash
+    yo bcdk:python-hello
 
 
-     _-----_     ╭──────────────────────────╮
-    |       |    │   Welcome to the doozie  │
-    |--(o)--|    │      generator-bcdk      │
-   `---------´   │        generator!        │
-    ( _´U`_ )    ╰──────────────────────────╯
-    /___A___\   /
-     |  ~  |
-   __'.___.'__
- ´   `  |° ´ Y `
+        _-----_     ╭──────────────────────────╮
+        |       |    │   Welcome to the doozie  │
+        |--(o)--|    │      generator-bcdk      │
+      `---------´   │        generator!        │
+        ( _´U`_ )    ╰──────────────────────────╯
+        /___A___\   /
+        |  ~  |
+      __'.___.'__
+    ´   `  |° ´ Y `
 
- What module this component will belong to? main
- What module root path? .
- What do you want to call this component? hello
-Setting module
- What is this module name? main
- What is this module version? 1.0.0
- What environments are supported by your app? separated by space build dev test prod
- What is the source code directory for this module? .
- What namespace/project name is used for 'build?' gtncer-tools
- What namespace/project name is used for 'dev?' gtncer-dev
- What namespace/project name is used for 'test?' gtncer-test
- What namespace/project name is used for 'prod?' gtncer-prod
-Installing Node Modules in ./.pipeline
-Writing 'pipeline' files.
-identical hello-main/app.py
-identical hello-main/requirements.txt
-identical hello-base/Dockerfile
-identical openshift/python-chain-build.yaml
-identical openshift/python-deploy.yaml
-identical .pipeline/build.js
-identical .pipeline/clean.js
-identical .pipeline/deploy.js
-identical .pipeline/lib/build.js
-identical .pipeline/lib/clean.js
-identical .pipeline/lib/config.js
-identical .pipeline/lib/deploy.js
-identical .pipeline/npmw
-identical .pipeline/package.json
-identical Jenkinsfile
-audited 6 packages in 0.31s
-found 0 vulnerabilities
+    What module this component will belong to? main
+    What module root path? .
+    What do you want to call this component? hello
+    Setting module
+    What is this module name? main
+    What is this module version? 1.0.0
+    What environments are supported by your app? separated by space build dev test prod
+    What is the source code directory for this module? .
+    What namespace/project name is used for 'build?' gtncer-tools
+    What namespace/project name is used for 'dev?' gtncer-dev
+    What namespace/project name is used for 'test?' gtncer-test
+    What namespace/project name is used for 'prod?' gtncer-prod
+    Installing Node Modules in ./.pipeline
+    Writing 'pipeline' files.
+    identical hello-main/app.py
+    identical hello-main/requirements.txt
+    identical hello-base/Dockerfile
+    identical openshift/python-chain-build.yaml
+    identical openshift/python-deploy.yaml
+    identical .pipeline/build.js
+    identical .pipeline/clean.js
+    identical .pipeline/deploy.js
+    identical .pipeline/lib/build.js
+    identical .pipeline/lib/clean.js
+    identical .pipeline/lib/config.js
+    identical .pipeline/lib/deploy.js
+    identical .pipeline/npmw
+    identical .pipeline/package.json
+    identical Jenkinsfile
+    audited 6 packages in 0.31s
+    found 0 vulnerabilities
 
-Don't forget to update:
-1) '.pipeline/lib/config.js'. See '.pipeline/examples/hello/config.js' for an example.
-2) '.pipeline/lib/build.js'. See '.pipeline/examples/hello/build.js' for an example.
+    Don't forget to update:
+    1) '.pipeline/lib/config.js'. See '.pipeline/examples/hello/config.js' for an example.
+    2) '.pipeline/lib/build.js'. See '.pipeline/examples/hello/build.js' for an example.
 
-```
+    ```
 
-What you may have noticed is that there are untracked files from when we ran `bcdk:python-hello` in previous section when we were setting up the Jenkins pipeline for the sample app.  No problem, and the generator confirms that with it's output.
+    What you may have noticed is that there are untracked files from when we ran `bcdk:python-hello` in previous section when we were setting up the Jenkins pipeline for the sample app.  No problem, and the generator confirms that with it's output.
 
-Also notice the last comment in the output of the generator.  We must modify `.pipeline/lib/config.js` and `.pipeline/lib/build.js`.
+    Also notice the last comment in the output of the generator.  We must modify `.pipeline/lib/config.js` and `.pipeline/lib/build.js`.
 
 3. Commit and push the unmodified files
 
-Before we modify the scaffold files, commit and push to GitHub.
+    Before we modify the scaffold files, commit and push to GitHub.
 
-```bash
-git add --all
-git commit -m "Initial commit of the python-hello app"
-git push
-```
+    ```bash
+    git add --all
+    git commit -m "Initial commit of the python-hello app"
+    git push
+    ```
 
 4. Modify .pipeline/lib/build.js files
 
-An objects block needs to be added, see this diff for what was added.
+    An objects block needs to be added, see this diff for what was added.
 
-```bash
-diff --git a/.pipeline/lib/build.js b/.pipeline/lib/build.js
-index 05b873d..2d41c8e 100755
---- a/.pipeline/lib/build.js
-+++ b/.pipeline/lib/build.js
-@@ -11,8 +11,18 @@ module.exports = (settings)=>{
-   const templatesLocalBaseUrl =oc.toFileUrl(path.resolve(__dirname, '../../openshift'))
+    ```bash
+    diff --git a/.pipeline/lib/build.js b/.pipeline/lib/build.js
+    index 05b873d..2d41c8e 100755
+    --- a/.pipeline/lib/build.js
+    +++ b/.pipeline/lib/build.js
+    @@ -11,8 +11,18 @@ module.exports = (settings)=>{
+      const templatesLocalBaseUrl =oc.toFileUrl(path.resolve(__dirname, '../../openshift'))
 
-   // The building of your cool app goes here ▼▼▼
--
--
-+   objects.push(...oc.processDeploymentTemplate(`${templatesLocalBaseUrl}/python-chain-build.yaml`, {
-+    'param':{
-+      'NAME': phases[phase].name,
-+      'SUFFIX': phases[phase].suffix,
-+      'VERSION': phases[phase].tag,
-+      'SOURCE_REPOSITORY_URL': oc.git.http_url,
-+      'SOURCE_REPOSITORY_REF': oc.git.ref,
-+      'SOURCE_BASE_CONTEXT_DIR': 'hello-base',
-+      'SOURCE_CONTEXT_DIR': 'hello-main'
-+    }
-+  }))
-+
-   oc.applyRecommendedLabels(objects, phases[phase].name, phase, phases[phase].changeId, phases[phase].instance)
-   oc.applyAndBuild(objects)
- }
- ```
+      // The building of your cool app goes here ▼▼▼
+    -
+    -
+    +   objects.push(...oc.processDeploymentTemplate(`${templatesLocalBaseUrl}/python-chain-build.yaml`, {
+    +    'param':{
+    +      'NAME': phases[phase].name,
+    +      'SUFFIX': phases[phase].suffix,
+    +      'VERSION': phases[phase].tag,
+    +      'SOURCE_REPOSITORY_URL': oc.git.http_url,
+    +      'SOURCE_REPOSITORY_REF': oc.git.ref,
+    +      'SOURCE_BASE_CONTEXT_DIR': 'hello-base',
+    +      'SOURCE_CONTEXT_DIR': 'hello-main'
+    +    }
+    +  }))
+    +
+      oc.applyRecommendedLabels(objects, phases[phase].name, phase, phases[phase].changeId, phases[phase].instance)
+      oc.applyAndBuild(objects)
+    }
+    ```
 
 5. Modify .pipeline/lib/deploy.js files
 
-An objects block needs to be added, see this diff for what was added.
+    An objects block needs to be added, see this diff for what was added.
 
-```bash
-diff --git a/.pipeline/lib/deploy.js b/.pipeline/lib/deploy.js
-index ad8c3b1..7fb89ca 100755
---- a/.pipeline/lib/deploy.js
-+++ b/.pipeline/lib/deploy.js
-@@ -12,6 +12,15 @@ module.exports = (settings)=>{
-   var objects = []
+    ```bash
+    diff --git a/.pipeline/lib/deploy.js b/.pipeline/lib/deploy.js
+    index ad8c3b1..7fb89ca 100755
+    --- a/.pipeline/lib/deploy.js
+    +++ b/.pipeline/lib/deploy.js
+    @@ -12,6 +12,15 @@ module.exports = (settings)=>{
+      var objects = []
 
-   // The deployment of your cool app goes here ▼▼▼
-+   objects.push(...oc.processDeploymentTemplate(`${templatesLocalBaseUrl}/python-deploy.yaml`, {
-+    'param':{
-+      'NAME': phases[phase].name,
-+      'SUFFIX': phases[phase].suffix,
-+      'VERSION': phases[phase].tag,
-+      'HOST': `${phases[phase].name}${phases[phase].suffix}-${phases[phase].namespace}.ocp.bitbox.ca`
-+    }
-+  }))
-+
+      // The deployment of your cool app goes here ▼▼▼
+    +   objects.push(...oc.processDeploymentTemplate(`${templatesLocalBaseUrl}/python-deploy.yaml`, {
+    +    'param':{
+    +      'NAME': phases[phase].name,
+    +      'SUFFIX': phases[phase].suffix,
+    +      'VERSION': phases[phase].tag,
+    +      'HOST': `${phases[phase].name}${phases[phase].suffix}-${phases[phase].namespace}.ocp.bitbox.ca`
+    +    }
+    +  }))
+    +
 
-   oc.applyRecommendedLabels(objects, phases[phase].name, phase, `${changeId}`, phases[phase].instance)
-   oc.importImageStreams(objects, phases[phase].tag, phases.build.namespace, phases.build.tag)
-```
+      oc.applyRecommendedLabels(objects, phases[phase].name, phase, `${changeId}`, phases[phase].instance)
+      oc.importImageStreams(objects, phases[phase].tag, phases.build.namespace, phases.build.tag)
+    ```
 
 6. Commit and push the configuration change to GitHub.
 
-```bash
-git add .pipeline/lib/build.js .pipeline/lib/deploy.js
-git commit -m"Configure python-app for build and deployment"
-git push
-```
+    ```bash
+    git add .pipeline/lib/build.js .pipeline/lib/deploy.js
+    git commit -m"Configure python-app for build and deployment"
+    git push
+    ```
+
 7. Create a Pull Request
 
-On GitHub create a pull request to merge `feature/python-hello-app` to `master
+    On GitHub create a pull request to merge `feature/python-hello-app` to `master`
 
-If all goes well, the pipeline will build and deploy to `dev` and then will prompt and wait for you to approve a promotion to `test`.  It will also prompt and wait for approval to deploy to `prod`.
+    If all goes well, the pipeline will build and deploy to `dev` and then will prompt and wait for you to approve a promotion to `test`.  It will also prompt and wait for approval to deploy to `prod`.
 
-After deployment to `dev`, `test`, and `prod`, got to each of these Openshift namespaces and click on the route for the python-hello application.
+    After deployment to `dev`, `test`, and `prod`, got to each of these Openshift namespaces and click on the route for the python-hello application.
 
-In `dev` it will have a name like `main-dev-4` and url will be similar to `https://main-dev-4-gtncer-dev.ocp.bitbox.ca`
+    In `dev` it will have a name like `main-dev-4` and url will be similar to `https://main-dev-4-gtncer-dev.ocp.bitbox.ca`
 
-In `test` and `prod`, the route name will not have the Pull Request number associated.  (i.e. `main-test` and `main-prod`)
+    In `test` and `prod`, the route name will not have the Pull Request number associated.  (i.e. `main-test` and `main-prod`)
 
 8. Close the Pull Request and tidy up!
 
-The last thing to do is close the pull request and tidy up:
+    The last thing to do is close the pull request and tidy up:
 
-+ Go to GitHub and perform a `Squash and Merge` on the pull request.
-+ Delete the feature branch using the button available on GitHub.
-+ On your local system, change directory to be at the root of the repository.
-+ Checkout `master` and pull the merge to your local copy of `master`
-+ Delete your local copy of the feature branch.
+    + Go to GitHub and perform a `Squash and Merge` on the pull request.
+    + Delete the feature branch using the button available on GitHub.
+    + On your local system, change directory to be at the root of the repository.
+    + Checkout `master` and pull the merge to your local copy of `master`
+    + Delete your local copy of the feature branch.
 
-```bash
-cd ../..
-git status .
-git checkout master
-git pull
-git branch -d feature/python-hello-app
-```
+    ```bash
+    cd ../..
+    git status .
+    git checkout master
+    git pull
+    git branch -d feature/python-hello-app
+    ```
 
 At this point, there is only a `master` branch on GitHub and everything is tidy and ready for the next step.  Furthermore, the build artifacts in `-tools` and the deployment artifacts in `dev` have been deleted.  The application continues to run in `test` and `prod`
 
