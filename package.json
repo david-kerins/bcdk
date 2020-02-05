@@ -1,6 +1,6 @@
 {
-  "name": "generator-bcdk",
-  "version": "0.0.0",
+  "name": "@bcgov/generator-bcdk",
+  "version": "0.0.3-3",
   "description": "BCGOV Developer Kit",
   "homepage": "https://developer.gov.bc.ca",
   "author": {
@@ -13,7 +13,8 @@
   "main": "generators/index.js",
   "keywords": [
     "bcgov",
-    "yeoman-generator"
+    "yeoman-generator",
+    "bcdk"
   ],
   "devDependencies": {
     "babel-eslint": "^10.0.1",
@@ -29,7 +30,8 @@
     "yeoman-test": "^1.7.0"
   },
   "engines": {
-    "npm": ">= 10.15.0"
+    "node": ">= 10.15.0",
+    "npm": ">= 6.0.0"
   },
   "dependencies": {
     "chalk": "^2.1.0",
@@ -61,6 +63,6 @@
     "_pretest": "eslint .",
     "test": "jest"
   },
-  "repository": "cvarjao/generator-bcdk",
+  "repository": "BCDevOps/bcdk",
   "license": "Apache-2.0"
 }
