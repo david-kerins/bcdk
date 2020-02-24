@@ -5,10 +5,11 @@ on: [pull_request]
 jobs:
   build:
 
-    runs-on: ubuntu-18.04
+    runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
+        os: [ubuntu-18.04, macos-latest, windows-latest]
         node-version: [8.x,  10.x, 12.x]
 
     steps:
@@ -21,3 +22,7 @@ jobs:
     - run: npm test
       env:
         CI: true
+    - run: npm link
+    - run: npm install -g yo
+    - run: yo @bcgov/bcdk --help
+      
